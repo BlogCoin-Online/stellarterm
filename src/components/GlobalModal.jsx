@@ -1,66 +1,72 @@
-const React = window.React = require('react');
-import TransactionSummary from './TransactionSummary.jsx';
-import SignWithLedgerModal from './SignWithLedgerModal.jsx';
+import React from 'react';
+import TransactionSummary from './TransactionSummary';
+import SignWithLedgerModal from './SignWithLedgerModal';
+import MultisigSubmitModal from './MultisigSubmitModal';
+import MultisigUnknownSubmitModal from './MultisigUnknownSubmitModal'
 
 export default class GlobalModal extends React.Component {
-  constructor(props) {
-    super(props);
-    this.unsub = this.props.d.modal.event.sub(() => {this.forceUpdate()});
-    this.state = {
-    };
-  }
-  componentWillUnmount() {
-    this.unsub();
-  }
+    constructor(props) {
+        super(props);
+        this.unsub = this.props.d.modal.event.sub(() => { this.forceUpdate(); });
+        this.state = {
+        };
+    }
+    componentWillUnmount() {
+        this.unsub();
+    }
 
-  componentDidCatch(error, info) {
-    console.error(error);
-    this.setState({
-    });
-  }
+    componentDidCatch(error, info) {
+        console.error(error);
+        this.setState({
+        });
+    }
 
-  render() {
-    let d = this.props.d;
-    let modal = d.modal;
-    let body;
+    render() {
+        const d = this.props.d;
+        const modal = d.modal;
+        let body;
 
 
-    if (modal.modalName === 'sign') {
-      let laboratoryContent;
-      if (d.session.account.inflation_destination === 'GDCHDRSDOBRMSUDKRE2C4U4KDLNEATJPIHHR2ORFL5BSD56G4DQXL4VW') {
-        laboratoryContent = <div className="GlobalModal__content">
-          <a href={'https://www.stellar.org/laboratory/#txsigner?xdr=' + encodeURI(modal.inputData.toEnvelope().toXDR('base64')) + '&network=public'} target="_blank" rel="nofollow noopener noreferrer">View in Stellar Laboratory</a>
-        </div>
-      }
+        if (modal.modalName === 'sign') {
+            let laboratoryContent;
+            if (d.session.account.inflation_destination === 'GDCHDRSDOBRMSUDKRE2C4U4KDLNEATJPIHHR2ORFL5BSD56G4DQXL4VW') {
+                laboratoryContent = (<div className="GlobalModal__content">
+          <a href={`https://www.stellar.org/laboratory/#txsigner?xdr=${encodeURI(modal.inputData.toEnvelope().toXDR('base64'))}&network=public`} target="_blank" rel="nofollow noopener noreferrer">View in Stellar Laboratory</a>
+        </div>);
+            }
       // To get tx xdr: modal.inputData.toEnvelope().toXDR('base64')
-      body = <div className="GlobalModal">
+            body = (<div className="GlobalModal">
         <div className="GlobalModal__header">
           Sign transaction
         </div>
         <div className="GlobalModal__content">
-          <TransactionSummary tx={modal.inputData}></TransactionSummary>
+          <TransactionSummary tx={modal.inputData} />
         </div>
         {laboratoryContent}
         <div className="GlobalModal__navigation">
-          <button className="s-button s-button--light" onClick={() => {d.modal.handlers.cancel()}}>Cancel</button>
-          <button className="s-button" onClick={() => {d.modal.handlers.finish()}}>Sign</button>
+          <button className="s-button s-button--light" onClick={() => { d.modal.handlers.cancel(); }}>Cancel</button>
+          <button className="s-button" onClick={() => { d.modal.handlers.finish(); }}>Sign</button>
         </div>
-      </div>
-    } else if (modal.modalName === 'signWithLedger') {
-      body = <SignWithLedgerModal d={d} />
-    } else {
-      body = <div className="GlobalModal">
+      </div>);
+        } else if (modal.modalName === 'signWithLedger') {
+            body = <SignWithLedgerModal d={d} />;
+        } else if (modal.modalName === 'StellarGuard' || modal.modalName === 'Lobstr Vault') {
+            body = <MultisigSubmitModal name={modal.modalName} submit={d.modal.handlers.cancel} />;
+        } else if (modal.modalName === 'multisigUnknown') {
+            body = <MultisigUnknownSubmitModal tx={modal.inputData} submit={d.modal.handlers.cancel} />;
+        } else {
+            body = (<div className="GlobalModal">
         <div className="GlobalModal__content">
           Error: missing modal {modal.modalName}
         </div>
         <div className="GlobalModal__navigation">
-          <button className="s-button s-button--light" onClick={() => {d.modal.handlers.cancel()}}>Cancel</button>
+          <button className="s-button s-button--light" onClick={() => { d.modal.handlers.cancel(); }}>Cancel</button>
         </div>
-      </div>
-    }
+      </div>);
+        }
 
-    return <div className={'GlobalModalBackdrop' + (d.modal.active ? '' : ' is-hidden')}>
+        return (<div className={`GlobalModalBackdrop${d.modal.active ? '' : ' is-hidden'}`}>
       {body}
-    </div>
-  }
+    </div>);
+    }
 }
